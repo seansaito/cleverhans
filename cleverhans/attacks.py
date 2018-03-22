@@ -17,7 +17,7 @@ class Attack(object):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, model, back='tf', sess=None):
+    def __init__(self, model, loss_type, back='tf', sess=None):
         """
         :param model: An instance of the cleverhans.model.Model class.
         :param back: The backend to use. Currently 'tf' is the only option.
@@ -38,6 +38,7 @@ class Attack(object):
         self.model = model
         self.back = back
         self.sess = sess
+        self.loss_type = loss_type
 
         # We are going to keep track of old graphs and cache them.
         self.graphs = {}
@@ -280,7 +281,7 @@ class FastGradientMethod(Attack):
 
         labels, nb_classes = self.get_or_guess_labels(x, kwargs)
 
-        return fgm(x, self.model.get_probs(x), y=labels, eps=self.eps,
+        return fgm(x, self.model.get_probs(x), loss_type=self.loss_type, y=labels, eps=self.eps,
                    ord=self.ord, clip_min=self.clip_min,
                    clip_max=self.clip_max,
                    targeted=(self.y_target is not None))
@@ -491,7 +492,7 @@ class MomentumIterativeMethod(Attack):
                                 'y_target': np.float32,
                                 'clip_min': np.float32,
                                 'clip_max': np.float32}
-        self.structural_kwargs = ['ord', 'nb_iter', 'decay_factor']
+        self.structural_kwargs = ['ord', 'nb_iter', 'decay_factor', 'loss_type']
 
     def generate(self, x, **kwargs):
         """
@@ -511,6 +512,7 @@ class MomentumIterativeMethod(Attack):
         :param decay_factor: (optional) Decay factor for the momentum term.
         :param clip_min: (optional float) Minimum input component value
         :param clip_max: (optional float) Maximum input component value
+        :param loss_type: (required str) Loss function type
         """
         import tensorflow as tf
 
@@ -530,7 +532,7 @@ class MomentumIterativeMethod(Attack):
         for i in range(self.nb_iter):
             # Compute loss
             preds = self.model.get_probs(adv_x)
-            loss = utils_tf.model_loss(y, preds, mean=False)
+            loss = utils_tf.model_loss(y, preds, loss_type=self.loss_type, mean=False)
             if targeted:
                 loss = -loss
 
@@ -1183,7 +1185,7 @@ class LBFGS(Attack):
                               self.y_target, self.binary_search_steps,
                               self.max_iterations, self.initial_const,
                               self.clip_min, self.clip_max, nb_classes,
-                              self.batch_size)
+                              self.batch_size, self.loss_type)
 
         def lbfgs_wrap(x_val, y_val):
             return np.array(attack.attack(x_val, y_val), dtype=np.float32)
@@ -1345,7 +1347,7 @@ class MadryEtAl(Attack):
 
         adv_x = x + eta
         preds = self.model.get_probs(adv_x)
-        loss = model_loss(y, preds)
+        loss = model_loss(y, preds, loss_type=self.loss_type)
         if self.targeted:
             loss = -loss
         grad, = tf.gradients(loss, adv_x)

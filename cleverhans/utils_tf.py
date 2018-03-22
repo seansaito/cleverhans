@@ -13,11 +13,12 @@ import time
 import warnings
 
 from .utils import batch_indices, _ArgsWrapper, create_logger
+from .constants import KEYWORDS
 
 _logger = create_logger("cleverhans.utils.tf")
 
 
-def model_loss(y, model, mean=True):
+def model_loss(y, model, loss_type, mean=True):
     """
     Define loss of TF graph
     :param y: correct labels
@@ -29,12 +30,15 @@ def model_loss(y, model, mean=True):
     """
 
     op = model.op
-    if op.type == "Softmax":
+    if op.type == KEYWORDS.SOFTMAX:
         logits, = op.inputs
     else:
         logits = model
 
-    out = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y)
+    if loss_type == KEYWORDS.CE:
+        out = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y)
+    elif loss_type == KEYWORDS.MSE:
+        out = tf.losses.mean_squared_error(labels=y, predictions=logits)
 
     if mean:
         out = tf.reduce_mean(out)
@@ -66,7 +70,7 @@ def initialize_uninitialized_global_variables(sess):
 
 def model_train(sess, x, y, predictions, X_train, Y_train, save=False,
                 predictions_adv=None, init_all=True, evaluate=None,
-                feed=None, args=None, rng=None):
+                feed=None, args=None, rng=None, loss_type=KEYWORDS.CE):
     """
     Train a TF graph
     :param sess: TF session to use when training the graph
@@ -109,9 +113,9 @@ def model_train(sess, x, y, predictions, X_train, Y_train, save=False,
         rng = np.random.RandomState()
 
     # Define loss
-    loss = model_loss(y, predictions)
+    loss = model_loss(y, predictions, loss_type=loss_type)
     if predictions_adv is not None:
-        loss = (loss + model_loss(y, predictions_adv)) / 2
+        loss = (loss + model_loss(y, predictions_adv, loss_type=loss_type)) / 2
 
     train_step = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
     train_step = train_step.minimize(loss)

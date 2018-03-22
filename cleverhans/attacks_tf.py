@@ -15,12 +15,12 @@ from . import utils
 _logger = utils.create_logger("cleverhans.attacks.tf")
 
 
-def fgsm(x, predictions, eps=0.3, clip_min=None, clip_max=None):
-    return fgm(x, predictions, y=None, eps=eps, ord=np.inf, clip_min=clip_min,
+def fgsm(x, loss_type, predictions, eps=0.3, clip_min=None, clip_max=None):
+    return fgm(x, predictions, loss_type, y=None, eps=eps, ord=np.inf, clip_min=clip_min,
                clip_max=clip_max)
 
 
-def fgm(x, preds, y=None, eps=0.3, ord=np.inf,
+def fgm(x, preds, loss_type, y=None, eps=0.3, ord=np.inf,
         clip_min=None, clip_max=None,
         targeted=False):
     """
@@ -55,7 +55,7 @@ def fgm(x, preds, y=None, eps=0.3, ord=np.inf,
     y = y / tf.reduce_sum(y, 1, keep_dims=True)
 
     # Compute loss
-    loss = utils_tf.model_loss(y, preds, mean=False)
+    loss = utils_tf.model_loss(y, preds, loss_type=loss_type, mean=False)
     if targeted:
         loss = -loss
 
@@ -1333,7 +1333,7 @@ class LBFGS_attack(object):
 
     def __init__(self, sess, x, model_preds, targeted_label,
                  binary_search_steps, max_iterations, initial_const,
-                 clip_min, clip_max, nb_classes, batch_size):
+                 clip_min, clip_max, nb_classes, batch_size, loss_type):
         """
         Return a tensor that constructs adversarial examples for the given
         input. Generate uses tf.py_func in order to operate over tensors.
@@ -1374,7 +1374,7 @@ class LBFGS_attack(object):
                                    name='ori_img')
         self.const = tf.Variable(np.zeros(self.batch_size), dtype=tf.float32,
                                  name='const')
-        self.score = utils_tf.model_loss(self.targeted_label, self.model_preds,
+        self.score = utils_tf.model_loss(self.targeted_label, self.model_preds, loss_type=loss_type,
                                          mean=False)
         self.l2dist = tf.reduce_sum(tf.square(self.x - self.ori_img))
         # small self.const will result small adversarial perturbation

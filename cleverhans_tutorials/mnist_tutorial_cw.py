@@ -13,6 +13,10 @@ import numpy as np
 from six.moves import xrange
 import tensorflow as tf
 from tensorflow.python.platform import flags
+import os
+
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 
 import logging
 import os
@@ -60,7 +64,9 @@ def mnist_tutorial_cw(train_start=0, train_end=60000, test_start=0,
     tf.set_random_seed(1234)
 
     # Create TF session
-    sess = tf.Session()
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config=config)
     print("Created TensorFlow session.")
 
     set_log_level(logging.DEBUG)

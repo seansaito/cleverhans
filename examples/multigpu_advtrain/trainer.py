@@ -44,6 +44,7 @@ class TrainManager(object):
         """
         self.hparams = hparams
         self.batch_size = hparams.batch_size
+        self.loss_type =hparams.loss_type
         self.evaluate = None
         self.step_num = 0
         self.report = None
@@ -175,10 +176,10 @@ class TrainManager(object):
         with tf.variable_scope('train_loss'):
             if predictions_adv is not None:
                 if hparams.only_adv_train:
-                    loss = build_train_op(y, predictions_adv)
+                    loss = build_train_op(y, predictions_adv, loss_type=self.loss_type)
                 else:
-                    loss = build_train_op(y, predictions)
-                    adv_loss = build_train_op(y, predictions_adv)
+                    loss = build_train_op(y, predictions, loss_type=self.loss_type)
+                    adv_loss = build_train_op(y, predictions_adv, loss_type=self.loss_type)
                     loss = (loss + adv_loss) / 2
             else:
                 loss = build_train_op(y, predictions)
