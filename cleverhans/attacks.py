@@ -6,6 +6,7 @@ import collections
 
 import cleverhans.utils as utils
 from cleverhans.model import Model, CallableModelWrapper
+from cleverhans.constants import KEYWORDS
 
 _logger = utils.create_logger("cleverhans.attacks")
 
@@ -17,7 +18,7 @@ class Attack(object):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, model, loss_type, back='tf', sess=None):
+    def __init__(self, model, back='tf', sess=None, loss_type=KEYWORDS.CE):
         """
         :param model: An instance of the cleverhans.model.Model class.
         :param back: The backend to use. Currently 'tf' is the only option.
@@ -237,7 +238,7 @@ class FastGradientMethod(Attack):
     Paper link: https://arxiv.org/abs/1412.6572
     """
 
-    def __init__(self, model, back='tf', sess=None):
+    def __init__(self, model, back='tf', sess=None, loss_type=KEYWORDS.CE):
         """
         Create a FastGradientMethod instance.
         Note: the model parameter should be an instance of the
@@ -246,7 +247,7 @@ class FastGradientMethod(Attack):
         if not isinstance(model, Model):
             model = CallableModelWrapper(model, 'probs')
 
-        super(FastGradientMethod, self).__init__(model, back, sess)
+        super(FastGradientMethod, self).__init__(model, back, sess, loss_type)
         self.feedable_kwargs = {'eps': np.float32,
                                 'y': np.float32,
                                 'y_target': np.float32,
@@ -334,7 +335,7 @@ class BasicIterativeMethod(Attack):
     Paper link: https://arxiv.org/pdf/1607.02533.pdf
     """
 
-    def __init__(self, model, back='tf', sess=None):
+    def __init__(self, model, back='tf', sess=None, loss_type=KEYWORDS.CE):
         """
         Create a BasicIterativeMethod instance.
         Note: the model parameter should be an instance of the
@@ -343,7 +344,7 @@ class BasicIterativeMethod(Attack):
         if not isinstance(model, Model):
             model = CallableModelWrapper(model, 'probs')
 
-        super(BasicIterativeMethod, self).__init__(model, back, sess)
+        super(BasicIterativeMethod, self).__init__(model, back, sess, loss_type)
         self.feedable_kwargs = {'eps': np.float32,
                                 'eps_iter': np.float32,
                                 'y': np.float32,
@@ -476,7 +477,7 @@ class MomentumIterativeMethod(Attack):
     Paper link: https://arxiv.org/pdf/1710.06081.pdf
     """
 
-    def __init__(self, model, back='tf', sess=None):
+    def __init__(self, model, back='tf', sess=None, loss_type=KEYWORDS.CE):
         """
         Create a MomentumIterativeMethod instance.
         Note: the model parameter should be an instance of the
@@ -485,7 +486,7 @@ class MomentumIterativeMethod(Attack):
         if not isinstance(model, Model):
             model = CallableModelWrapper(model, 'probs')
 
-        super(MomentumIterativeMethod, self).__init__(model, back, sess)
+        super(MomentumIterativeMethod, self).__init__(model, back, sess, loss_type)
         self.feedable_kwargs = {'eps': np.float32,
                                 'eps_iter': np.float32,
                                 'y': np.float32,
@@ -630,7 +631,7 @@ class SaliencyMapMethod(Attack):
     Paper link: https://arxiv.org/pdf/1511.07528.pdf
     """
 
-    def __init__(self, model, back='tf', sess=None):
+    def __init__(self, model, back='tf', sess=None, loss_type=KEYWORDS.CE):
         """
         Create a SaliencyMapMethod instance.
         Note: the model parameter should be an instance of the
@@ -639,7 +640,7 @@ class SaliencyMapMethod(Attack):
         if not isinstance(model, Model):
             model = CallableModelWrapper(model, 'probs')
 
-        super(SaliencyMapMethod, self).__init__(model, back, sess)
+        super(SaliencyMapMethod, self).__init__(model, back, sess, loss_type)
 
         import tensorflow as tf
         self.feedable_kwargs = {'y_target': tf.float32}
@@ -760,7 +761,7 @@ class VirtualAdversarialMethod(Attack):
 
     """
 
-    def __init__(self, model, back='tf', sess=None):
+    def __init__(self, model, back='tf', sess=None, loss_type=KEYWORDS.CE):
         """
         Note: the model parameter should be an instance of the
         cleverhans.model.Model abstraction provided by CleverHans.
@@ -768,7 +769,7 @@ class VirtualAdversarialMethod(Attack):
         if not isinstance(model, Model):
             model = CallableModelWrapper(model, 'logits')
 
-        super(VirtualAdversarialMethod, self).__init__(model, back, sess)
+        super(VirtualAdversarialMethod, self).__init__(model, back, sess, loss_type)
 
         import tensorflow as tf
         self.feedable_kwargs = {'eps': tf.float32, 'xi': tf.float32,
@@ -829,7 +830,7 @@ class CarliniWagnerL2(Attack):
     lower distortion than other attacks. This comes at the cost of speed,
     as this attack is often much slower than others.
     """
-    def __init__(self, model, back='tf', sess=None):
+    def __init__(self, model, back='tf', sess=None, loss_type=KEYWORDS.CE):
         """
         Note: the model parameter should be an instance of the
         cleverhans.model.Model abstraction provided by CleverHans.
@@ -837,7 +838,7 @@ class CarliniWagnerL2(Attack):
         if not isinstance(model, Model):
             model = CallableModelWrapper(model, 'logits')
 
-        super(CarliniWagnerL2, self).__init__(model, back, sess)
+        super(CarliniWagnerL2, self).__init__(model, back, sess, loss_type)
 
         import tensorflow as tf
         self.feedable_kwargs = {'y': tf.float32,
@@ -939,7 +940,7 @@ class ElasticNetMethod(Attack):
     complement adversarial training.
     Paper link: https://arxiv.org/abs/1709.04114
     """
-    def __init__(self, model, back='tf', sess=None):
+    def __init__(self, model, back='tf', sess=None, loss_type=KEYWORDS.CE):
         """
         Note: the model parameter should be an instance of the
         cleverhans.model.Model abstraction provided by CleverHans.
@@ -947,7 +948,7 @@ class ElasticNetMethod(Attack):
         if not isinstance(model, Model):
             model = CallableModelWrapper(model, 'logits')
 
-        super(ElasticNetMethod, self).__init__(model, back, sess)
+        super(ElasticNetMethod, self).__init__(model, back, sess, loss_type=loss_type)
 
         import tensorflow as tf
         self.feedable_kwargs = {'y': tf.float32,
@@ -1054,14 +1055,14 @@ class DeepFool(Attack):
     Paper link: "https://arxiv.org/pdf/1511.04599.pdf"
     """
 
-    def __init__(self, model, back='tf', sess=None):
+    def __init__(self, model, back='tf', sess=None, loss_type=KEYWORDS.CE):
         """
         Create a DeepFool instance.
         """
         if not isinstance(model, Model):
             model = CallableModelWrapper(model, 'logits')
 
-        super(DeepFool, self).__init__(model, back, sess)
+        super(DeepFool, self).__init__(model, back, sess, loss_type=loss_type)
 
         self.structural_kwargs = ['over_shoot', 'max_iter', 'clip_max',
                                   'clip_min', 'nb_candidate']

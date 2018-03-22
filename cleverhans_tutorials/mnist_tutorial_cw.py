@@ -10,13 +10,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import numpy as np
-from six.moves import xrange
 import tensorflow as tf
 from tensorflow.python.platform import flags
 import os
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="4"
 
 import logging
 import os
@@ -105,7 +104,7 @@ def mnist_tutorial_cw(train_start=0, train_end=60000, test_start=0,
         tf_model_load(sess, model_path)
     else:
         model_train(sess, x, y, preds, X_train, Y_train, args=train_params,
-                    save=os.path.exists("models"), rng=rng)
+                    save=os.path.exists("models"), rng=rng, loss_type=KEYWORDS.MSE)
 
     # Evaluate the accuracy of the MNIST model on legitimate test examples
     eval_params = {'batch_size': batch_size}
@@ -123,7 +122,7 @@ def mnist_tutorial_cw(train_start=0, train_end=60000, test_start=0,
     print("This could take some time ...")
 
     # Instantiate a CW attack object
-    cw = CarliniWagnerL2(model, back='tf', sess=sess)
+    cw = CarliniWagnerL2(model, back='tf', sess=sess, loss_type=KEYWORDS.MSE)
 
     if viz_enabled:
         assert source_samples == nb_classes
@@ -236,15 +235,15 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-    flags.DEFINE_boolean('viz_enabled', True, 'Visualize adversarial ex.')
+    flags.DEFINE_boolean('viz_enabled', False, 'Visualize adversarial ex.')
     flags.DEFINE_integer('nb_epochs', 6, 'Number of epochs to train model')
     flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
     flags.DEFINE_integer('nb_classes', 10, 'Number of output classes')
-    flags.DEFINE_integer('source_samples', 10, 'Nb of test inputs to attack')
+    flags.DEFINE_integer('source_samples', 100, 'Nb of test inputs to attack')
     flags.DEFINE_float('learning_rate', 0.001, 'Learning rate for training')
     flags.DEFINE_string('model_path', os.path.join("models", "mnist"),
                         'Path to save or load the model file')
-    flags.DEFINE_boolean('attack_iterations', 100,
+    flags.DEFINE_boolean('attack_iterations', 1000,
                          'Number of iterations to run attack; 1000 is good')
     flags.DEFINE_boolean('targeted', True,
                          'Run the tutorial in targeted mode?')
