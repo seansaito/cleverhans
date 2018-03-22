@@ -10,13 +10,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import numpy as np
-from six.moves import xrange
 import tensorflow as tf
 from tensorflow.python.platform import flags
 import os
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="4"
 
 import logging
 import os
@@ -124,7 +123,7 @@ def mnist_tutorial_cw(train_start=0, train_end=60000, test_start=0,
     print("This could take some time ...")
 
     # Instantiate a CW attack object
-    cw = CarliniWagnerL2(model, back='tf', sess=sess, loss_type=KEYWORDS.CE)
+    cw = CarliniWagnerL2(model, back='tf', sess=sess, loss_type=KEYWORDS.MSE)
 
     if viz_enabled:
         assert source_samples == nb_classes
@@ -245,7 +244,7 @@ if __name__ == '__main__':
     flags.DEFINE_float('learning_rate', 0.001, 'Learning rate for training')
     flags.DEFINE_string('model_path', os.path.join("models", "mnist"),
                         'Path to save or load the model file')
-    flags.DEFINE_boolean('attack_iterations', 100,
+    flags.DEFINE_boolean('attack_iterations', 1000,
                          'Number of iterations to run attack; 1000 is good')
     flags.DEFINE_boolean('targeted', True,
                          'Run the tutorial in targeted mode?')
